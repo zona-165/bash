@@ -32,8 +32,20 @@ echo -e "nyanpass\ny\ny" | bash <(curl -fLSs https://dl.nyafw.com/download/nyanp
 echo -e "1\ny\ny" | bash <(curl -fLSs https://dl.nyafw.com/download/nyanpass-install.sh) rel_nodeclient "-t e2cffc11-ba17-4de5-8d17-7b5719d43680 -u https://ny.qwqa.link"
 echo -e "2\ny\ny" | bash <(curl -fLSs https://dl.nyafw.com/download/nyanpass-install.sh) rel_nodeclient "-t 90a1ff7e-b2a2-41d7-88ac-8e4d253086c9 -u https://ny.qwqa.link"
 echo "✅ nyanpass 节点安装命令已执行"
+
+
+####################################
+# 第三部分：安装 RelayX 节点
+####################################
+
+echo "🚀 开始安装 RelayX 节点..."
+curl -sSL https://dl.relayx.cc/install.sh | sh -s -- -s https://www.kalocci.com -t 74236f14-9600-40b7-b2c6-b7d99cf86de7 -n 3e69e771-8f21-4d9d-a7be-020040c01b3f
+echo "✅ RelayX 节点安装完成"
+
+####################################
 # 第四部分：覆盖 /etc/sysctl.conf
 ####################################
+
 
 echo "⚙️ 正在覆盖 /etc/sysctl.conf ..."
 
