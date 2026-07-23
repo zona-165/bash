@@ -53,16 +53,36 @@ echo "✅ RelayX 节点安装完成"
 
 echo "🌐 开始配置 Cloudflare DDNS..."
 
-# 这里填写你的 Cloudflare 信息
+# ================================
+# Cloudflare DDNS 配置信息
+# 请修改成你自己的信息
+# ================================
+
 CFKEY_INPUT="b9e521142064346bc8d0ee9ca3f7f7724760e"
 CFUSER_INPUT="w18xh@outlook.com"
 CFZONE_INPUT="kalocci.com"
 CFRECORD_INPUT="aws-1-sg.kalocci.com"
 
 DDNS_SCRIPT="/root/cf-v4-ddns.sh"
+DDNS_URL="https://raw.githubusercontent.com/yulewang/cloudflare-api-v4-ddns/master/cf-v4-ddns.sh"
 
-echo "📥 正在下载 Cloudflare DDNS 脚本到 $DDNS_SCRIPT ..."
-wget -N --no-check-certificate https://raw.githubusercontent.com/yulewang/cloudflare-api-v4-ddns/master/cf-v4-ddns.sh -O "$DDNS_SCRIPT"
+echo "📥 正在下载 Cloudflare DDNS 脚本..."
+wget -N --no-check-certificate "$DDNS_URL" -O "$DDNS_SCRIPT"
+
+if [ ! -f "$DDNS_SCRIPT" ]; then
+    echo "❌ DDNS 脚本下载失败：$DDNS_SCRIPT 不存在"
+    exit 1
+fi
+
+if [ ! -s "$DDNS_SCRIPT" ]; then
+    echo "❌ DDNS 脚本下载失败：文件为空"
+    exit 1
+fi
+
+echo "✅ DDNS 脚本已下载到：$DDNS_SCRIPT"
+
+echo "🔐 正在设置执行权限..."
+chmod +x "$DDNS_SCRIPT"
 
 echo "📝 正在写入 Cloudflare DDNS 配置..."
 
@@ -71,16 +91,21 @@ sed -i "s/^CFUSER=.*/CFUSER=${CFUSER_INPUT}/" "$DDNS_SCRIPT"
 sed -i "s/^CFZONE_NAME=.*/CFZONE_NAME=${CFZONE_INPUT}/" "$DDNS_SCRIPT"
 sed -i "s/^CFRECORD_NAME=.*/CFRECORD_NAME=${CFRECORD_INPUT}/" "$DDNS_SCRIPT"
 
-echo "🔐 正在设置执行权限..."
-chmod +x "$DDNS_SCRIPT"
+echo "🔎 检查 DDNS 配置是否写入成功..."
+grep -E "CFUSER=|CFZONE_NAME=|CFRECORD_NAME=" "$DDNS_SCRIPT"
 
 echo "🧪 正在测试运行 Cloudflare DDNS..."
 bash "$DDNS_SCRIPT" || {
-    echo "❌ Cloudflare DDNS 测试失败，请检查 API Key、邮箱、主域名、DDNS记录是否正确"
+    echo "❌ Cloudflare DDNS 测试失败，请检查："
+    echo "   1. Cloudflare Global API Key 是否正确"
+    echo "   2. Cloudflare 邮箱是否正确"
+    echo "   3. 主域名是否已接入 Cloudflare"
+    echo "   4. DDNS A 记录是否已提前创建"
+    echo "   5. A 记录是否为灰色云朵 DNS only"
     exit 1
 }
 
-echo "⏰ 正在添加每分钟自动更新任务..."
+echo "⏰ 正在添加 Cloudflare DDNS 每分钟定时任务..."
 
 CRON_JOB="*/1 * * * * /root/cf-v4-ddns.sh >/dev/null 2>&1"
 
@@ -93,7 +118,9 @@ echo "🔄 正在启用并重启 cron 服务..."
 systemctl enable cron
 systemctl restart cron
 
-echo "✅ Cloudflare DDNS 已集成完成，每分钟自动更新 IP"
+echo "✅ Cloudflare DDNS 已配置完成，每分钟自动更新 IP"
+
+
 
 
 
