@@ -47,6 +47,57 @@ echo "✅ RelayX 节点安装完成"
 ####################################
 
 
+####################################
+# 第五部分：配置 Cloudflare DDNS
+####################################
+
+echo "🌐 开始配置 Cloudflare DDNS..."
+
+# 这里填写你的 Cloudflare 信息
+CFKEY_INPUT="b9e521142064346bc8d0ee9ca3f7f7724760e"
+CFUSER_INPUT="w18xh@outlook.com"
+CFZONE_INPUT="kalocci.com"
+CFRECORD_INPUT="aws-1-sg.kalocci.com"
+
+DDNS_SCRIPT="/root/cf-v4-ddns.sh"
+
+echo "📥 正在下载 Cloudflare DDNS 脚本到 $DDNS_SCRIPT ..."
+wget -N --no-check-certificate https://raw.githubusercontent.com/yulewang/cloudflare-api-v4-ddns/master/cf-v4-ddns.sh -O "$DDNS_SCRIPT"
+
+echo "📝 正在写入 Cloudflare DDNS 配置..."
+
+sed -i "s/^CFKEY=.*/CFKEY=${CFKEY_INPUT}/" "$DDNS_SCRIPT"
+sed -i "s/^CFUSER=.*/CFUSER=${CFUSER_INPUT}/" "$DDNS_SCRIPT"
+sed -i "s/^CFZONE_NAME=.*/CFZONE_NAME=${CFZONE_INPUT}/" "$DDNS_SCRIPT"
+sed -i "s/^CFRECORD_NAME=.*/CFRECORD_NAME=${CFRECORD_INPUT}/" "$DDNS_SCRIPT"
+
+echo "🔐 正在设置执行权限..."
+chmod +x "$DDNS_SCRIPT"
+
+echo "🧪 正在测试运行 Cloudflare DDNS..."
+bash "$DDNS_SCRIPT" || {
+    echo "❌ Cloudflare DDNS 测试失败，请检查 API Key、邮箱、主域名、DDNS记录是否正确"
+    exit 1
+}
+
+echo "⏰ 正在添加每分钟自动更新任务..."
+
+CRON_JOB="*/1 * * * * /root/cf-v4-ddns.sh >/dev/null 2>&1"
+
+crontab -l 2>/dev/null | grep -v "/root/cf-v4-ddns.sh" > /tmp/current_cron || true
+echo "$CRON_JOB" >> /tmp/current_cron
+crontab /tmp/current_cron
+rm -f /tmp/current_cron
+
+echo "🔄 正在启用并重启 cron 服务..."
+systemctl enable cron
+systemctl restart cron
+
+echo "✅ Cloudflare DDNS 已集成完成，每分钟自动更新 IP"
+
+
+
+
 echo "⚙️ 正在覆盖 /etc/sysctl.conf ..."
 
 cat > /etc/sysctl.conf << 'EOF'
